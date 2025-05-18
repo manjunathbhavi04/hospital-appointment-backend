@@ -14,15 +14,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/appointments")
+@RequestMapping("/api/appointments")
 @RequiredArgsConstructor
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
+    @GetMapping
+    public ResponseEntity<List<AppointmentResponse>> getAllAppointments() {
+        return new ResponseEntity<>(appointmentService.getAllAppointments(), HttpStatus.OK);
+    }
+
     @PostMapping("/book")
-    public ResponseEntity<Appointment> bookAppointment(@RequestBody AppointmentRequest appointmentRequest) {
-        Appointment appointment = appointmentService.bookAppointment(appointmentRequest);
+    public ResponseEntity<AppointmentResponse> bookAppointment(@RequestBody AppointmentRequest appointmentRequest) {
+        AppointmentResponse appointment = appointmentService.bookAppointment(appointmentRequest);
         return new ResponseEntity<>(appointment, HttpStatus.CREATED);
     }
 
@@ -31,8 +36,8 @@ public class AppointmentController {
         return appointmentService.getAllAppointmentsByStatus(AppointmentStatus.PENDING);
     }
 
-    @GetMapping("/status")
-    public List<AppointmentResponse> getAppointmentsByStatus(@RequestParam("status") AppointmentStatus status) {
+    @GetMapping("/{status}")
+    public List<AppointmentResponse> getAppointmentsByStatus(@PathVariable("status") AppointmentStatus status) {
         return appointmentService.getAllAppointmentsByStatus(status);
     }
 }

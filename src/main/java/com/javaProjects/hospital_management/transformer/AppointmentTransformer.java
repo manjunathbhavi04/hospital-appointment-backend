@@ -29,6 +29,7 @@ public class AppointmentTransformer {
                 .problemDescription(appointment.getProblemDescription())
                 .status(appointment.getStatus())
                 .appointmentDateTime(appointment.getScheduledTime())
+                .mode(appointment.getMode())
                 .build();
     }
 }

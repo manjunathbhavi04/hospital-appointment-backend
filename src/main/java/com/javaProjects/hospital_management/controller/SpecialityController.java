@@ -4,6 +4,7 @@ import com.javaProjects.hospital_management.dto.response.SpecialityResponse;
 import com.javaProjects.hospital_management.model.Speciality;
 import com.javaProjects.hospital_management.service.SpecialityService;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/speciality")
+@RequestMapping("/api/speciality")
 public class SpecialityController {
 
     private final SpecialityService specialityService;
@@ -21,6 +22,11 @@ public class SpecialityController {
     @GetMapping
     public ResponseEntity<List<SpecialityResponse>> getAllSpeciality() {
         return new ResponseEntity<>(specialityService.getAllSpeciality(), HttpStatus.OK);
+    }
+
+    @GetMapping("/name/{name}")
+    public ResponseEntity<Speciality> getSpecialityByName(@PathVariable("name") String name) {
+        return new ResponseEntity<>(specialityService.getSpecialityByName(name), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

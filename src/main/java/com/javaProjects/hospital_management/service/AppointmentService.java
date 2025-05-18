@@ -4,20 +4,15 @@ import com.javaProjects.hospital_management.Enum.AppointmentStatus;
 import com.javaProjects.hospital_management.dto.request.AppointmentRequest;
 import com.javaProjects.hospital_management.dto.response.AppointmentResponse;
 import com.javaProjects.hospital_management.exception.ResourceNotFound;
-import com.javaProjects.hospital_management.model.Appointment;
-import com.javaProjects.hospital_management.model.Doctor;
-import com.javaProjects.hospital_management.model.Patient;
-import com.javaProjects.hospital_management.model.User;
-import com.javaProjects.hospital_management.repository.AppointmentRepository;
-import com.javaProjects.hospital_management.repository.DoctorRepository;
-import com.javaProjects.hospital_management.repository.PatientRepository;
-import com.javaProjects.hospital_management.repository.UserRepository;
+import com.javaProjects.hospital_management.model.*;
+import com.javaProjects.hospital_management.repository.*;
 import com.javaProjects.hospital_management.transformer.AppointmentTransformer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,36 +24,63 @@ public class AppointmentService {
     private final PatientRepository patientRepository;
     private final EmailService emailService;
     private final UserRepository userRepository;
+    private final BillingRepository billingRepository;
 
     // Initial appointment booking by patient
-    public Appointment bookAppointment(AppointmentRequest appointmentRequest) {
+    public AppointmentResponse bookAppointment(AppointmentRequest appointmentRequest) {
         // Check if patient already exists by email. If so, use the existing patient.
         // If not, create and save a new patient.
-        Patient patient = patientRepository.findByEmail(appointmentRequest.getPatientEmail())
-                .orElseGet(() -> {
-                    Patient newPatient = Patient.builder()
-                            .name(appointmentRequest.getPatientName())
-                            .email(appointmentRequest.getPatientEmail())
-                            .phone(appointmentRequest.getPatientNumber())
-                            .build();
-                    return patientRepository.save(newPatient);
-                });
+//        Patient patient = patientRepository.findByEmail(appointmentRequest.getPatientEmail())
+//                .orElseGet(() -> {
+//                    Patient newPatient = Patient.builder()
+//                            .name(appointmentRequest.getPatientName())
+//                            .email(appointmentRequest.getPatientEmail())
+//                            .phone(appointmentRequest.getPatientNumber())
+//                            .build();
+//                    return patientRepository.save(newPatient);
+//                });
+
+        Patient patient = patientRepository.findByEmail(appointmentRequest.getPatientEmail());
+
+        if(patient != null) {
+            throw new RuntimeException("Already Present");
+        }
+
+        Patient newPatient = Patient.builder()
+                .name(appointmentRequest.getPatientName())
+                .email(appointmentRequest.getPatientEmail())
+                .phone(appointmentRequest.getPatientNumber())
+                .build();
+
+        patientRepository.save(newPatient);
+
+        System.out.println(appointmentRequest.getMode());
 
         // Create the appointment without doctor assignment
         Appointment appointment = Appointment.builder()
-                .patient(patient)
+                .patient(newPatient)
                 .status(AppointmentStatus.PENDING)
                 .problemDescription(appointmentRequest.getProblemDescription())
                 .mode(appointmentRequest.getMode())
+                .scheduledTime(appointmentRequest.getAppointmentDateTime())
                 .build();
 
-        // Send mail to the patient when they book an appointment
-        emailService.sendEmail(patient.getEmail(),
-                "Appointment Booked",
-                "Dear " + patient.getName() + "," + "\nYour Appointment has been booked. We will get back to you when a doctor is assigned."
-        );
+        appointmentRepository.save(appointment);
 
-        return appointmentRepository.save(appointment);
+        Billing billing = Billing.builder()
+                .appointment(appointment)
+                .patient(newPatient)
+                .build();
+
+        billingRepository.save(billing);
+
+        // Send mail to the patient when they book an appointment
+//        emailService.sendEmail(patient.getEmail(),
+//                "Appointment Booked",
+//                "Dear " + patient.getName() + "," + "\nYour Appointment has been booked. We will get back to you when a doctor is assigned."
+//        );
+
+        return AppointmentTransformer.appointmentToAppointmentResponse(appointment);
     }
 
     // Staff assigns doctor to appointment
@@ -129,5 +151,9 @@ public class AppointmentService {
         Doctor doctor = doctorRepository.findByUser(user)
                 .orElseThrow(() -> new ResourceNotFound("Doctor profile not found for user: " + username));
         return doctor.getDoctorId();
+    }
+
+    public List<AppointmentResponse> getAllAppointments() {
+        return appointmentRepository.findAll().stream().map(AppointmentTransformer::appointmentToAppointmentResponse).toList();
     }
 }

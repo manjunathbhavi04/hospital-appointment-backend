@@ -1,14 +1,17 @@
 package com.javaProjects.hospital_management.service;
 
 import com.javaProjects.hospital_management.Enum.AppointmentStatus;
+import com.javaProjects.hospital_management.Enum.PaymentStatus;
 import com.javaProjects.hospital_management.dto.response.AppointmentResponse; // Added for consistency
 import com.javaProjects.hospital_management.dto.response.DoctorResponse; // No longer directly used for return type, but kept if needed for internal ops
 import com.javaProjects.hospital_management.dto.response.StaffResponse;
 import com.javaProjects.hospital_management.exception.ResourceNotFound;
 import com.javaProjects.hospital_management.model.Appointment;
+import com.javaProjects.hospital_management.model.Billing;
 import com.javaProjects.hospital_management.model.Doctor;
 import com.javaProjects.hospital_management.model.Speciality; // Kept as Speciality is part of Doctor
 import com.javaProjects.hospital_management.repository.AppointmentRepository;
+import com.javaProjects.hospital_management.repository.BillingRepository;
 import com.javaProjects.hospital_management.repository.StaffRepository;
 import com.javaProjects.hospital_management.transformer.AppointmentTransformer; // Added for consistency
 import com.javaProjects.hospital_management.transformer.StaffTransformer;
@@ -26,6 +29,7 @@ public class StaffService {
     private final AppointmentRepository appointmentRepository;
     private final DoctorService doctorService; // Injecting DoctorService is fine
     private final EmailService emailService;
+    private final BillingRepository billingRepository;
     // private final SpecialityService specialityService; // Removed - if not used, remove it
 
     public List<StaffResponse> getAllStaff() {
@@ -72,11 +76,11 @@ public class StaffService {
         Appointment savedAppointment = appointmentRepository.save(appointment); // Save the changes
 
         // Optionally, notify the patient/doctor here about the automatic assignment
-        // emailService.sendEmail(savedAppointment.getPatient().getEmail(),
-        //         "Doctor Assigned to Your Appointment",
-        //         "Dear " + savedAppointment.getPatient().getName() + ",\n" +
-        //         "A doctor (" + assignedDoctor.getFullName() + ") has been assigned to your appointment. You will be notified of the scheduled time soon."
-        // );
+         emailService.sendEmail(savedAppointment.getPatient().getEmail(),
+                 "Doctor Assigned to Your Appointment",
+                 "Dear " + savedAppointment.getPatient().getName() + ",\n" +
+                 "A doctor (" + assignedDoctor.getFullName() + ") has been assigned to your appointment. You will be notified of the scheduled time soon."
+         );
 
         return AppointmentTransformer.appointmentToAppointmentResponse(savedAppointment);
     }
@@ -88,8 +92,16 @@ public class StaffService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFound("Appointment not found with ID: " + appointmentId));
 
+        Billing billing = billingRepository.findByAppointment(appointment).orElseThrow(
+                () -> new ResourceNotFound("Invalid Appointment id for bill")
+        );
+
         // Use doctorService to get the doctor, ensuring consistency
         Doctor doctor = doctorService.getDoctorById(doctorId);
+
+        billing.setDoctor(doctor);
+        billing.setPaymentStatus(PaymentStatus.UNPAID);
+        billingRepository.save(billing);
 
         appointment.setDoctor(doctor);
         appointment.setStatus(AppointmentStatus.SCHEDULED);
@@ -106,6 +118,13 @@ public class StaffService {
         }
 
         Appointment savedAppointment = appointmentRepository.save(appointment); // Save the changes
+
+        // Optionally, notify the patient/doctor here about the automatic assignment
+        emailService.sendEmail(savedAppointment.getPatient().getEmail(),
+                "Doctor Assigned to Your Appointment",
+                "Dear " + savedAppointment.getPatient().getName() + ",\n" +
+                        "A doctor (" + doctor.getFullName() + ") has been assigned to your appointment. You will be notified of the scheduled time soon."
+        );
 
         return AppointmentTransformer.appointmentToAppointmentResponse(savedAppointment);
     }

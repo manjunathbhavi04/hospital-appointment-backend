@@ -39,14 +39,14 @@ public class StaffController {
     }
 
     @PutMapping("/appointments/{appointmentId}/status")
-    public ResponseEntity<?> updateAppointmentStatus(
+    public ResponseEntity<AppointmentResponse> updateAppointmentStatus(
             @PathVariable Long appointmentId,
             @RequestParam AppointmentStatus status) {
         return ResponseEntity.ok(appointmentService.updateAppointmentStatus(appointmentId, status));
     }
 
     @GetMapping("/appointments/pending")
-    public ResponseEntity<?> getPendingAppointments() {
+    public ResponseEntity<List<AppointmentResponse>> getPendingAppointments() {
         return ResponseEntity.ok(appointmentService.getAllAppointmentsByStatus(AppointmentStatus.PENDING));
     }
 }

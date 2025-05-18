@@ -16,9 +16,9 @@ public class PatientService {
 
     public Patient addPatient(Patient patient) {
         // Check if a patient with this email already exists
-        Optional<Patient> existingPatient = patientRepository.findByEmail(patient.getEmail());
+        Patient existingPatient = patientRepository.findByEmail(patient.getEmail());
 
-        if (existingPatient.isPresent()) {
+        if (existingPatient != null) {
             // If a patient with this email exists, throw an exception
             // It's good practice to have a specific exception for this scenario
             // e.g., throw new PatientAlreadyExistsException("Patient with email: " + patient.getEmail() + " already exists.");

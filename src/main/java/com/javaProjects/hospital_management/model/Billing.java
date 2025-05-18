@@ -19,11 +19,11 @@ public class Billing {
     private Long billingId;
 
     @OneToOne
-    @JoinColumn(name = "patient_id", nullable = false)
+    @JoinColumn(name = "patient_id")
     private Patient patient;
 
     @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
+    @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 
     private LocalDate billingDate;
@@ -33,6 +33,10 @@ public class Billing {
     private double medicineFee;
 
     private double totalAmount;
+
+    @OneToOne
+    @JoinColumn(name="appointment_id")
+    private Appointment appointment;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;

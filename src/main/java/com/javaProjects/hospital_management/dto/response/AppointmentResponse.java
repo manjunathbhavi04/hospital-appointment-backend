@@ -1,5 +1,6 @@
 package com.javaProjects.hospital_management.dto.response;
 
+import com.javaProjects.hospital_management.Enum.AppointmentMode;
 import com.javaProjects.hospital_management.Enum.AppointmentStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,6 @@ public class AppointmentResponse {
     private String patientName;
     private LocalDateTime appointmentDateTime;
     private AppointmentStatus status;
-    private String reason;
+    private AppointmentMode mode;
     private String problemDescription;
 } 

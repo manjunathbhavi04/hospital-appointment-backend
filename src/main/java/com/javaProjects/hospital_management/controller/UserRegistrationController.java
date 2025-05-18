@@ -22,6 +22,7 @@ public class UserRegistrationController {
 
     @PostMapping("/doctor")
     public ResponseEntity<DoctorResponse> registerDoctor(@RequestBody DoctorRequest doctorRequest) {
+        System.out.println("Registering");
         DoctorResponse doctor = userRegistrationService.registerDoctor(doctorRequest);
         return ResponseEntity.ok(doctor);
     }

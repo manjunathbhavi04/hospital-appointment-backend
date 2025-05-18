@@ -75,14 +75,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Admin endpoints
                         .requestMatchers("/api/register/**").hasRole("ADMIN")  // Add doctors and staff
-                        .requestMatchers("/api/patient/**").hasRole("ADMIN")   // Add patients
+                        .requestMatchers("/api/patient/**").hasRole("ADMIN")
+                        .requestMatchers("/api/speciality/*").hasRole("ADMIN")
+                        .requestMatchers("/api/appointments/**").permitAll()
+                        .requestMatchers("/api/doctor/**").permitAll()//
                         // Staff endpoints
                         .requestMatchers("/api/staff/assign/doctor/**").hasRole("STAFF")  // Assign doctors to appointments
                         .requestMatchers("/api/staff/appointments/**").hasRole("STAFF")   // Manage appointments
                         // Doctor endpoints
                         .requestMatchers("/api/doctor/appointments/**").hasRole("DOCTOR") // Manage their appointments
+//                        .requestMatchers("/api/doctor/**").hasRole("DOCTOR")
                         // Public endpoints
-                        .requestMatchers("/appointments/book").permitAll()     // Book appointments
+                        .requestMatchers("/api/appointments/book").permitAll()     // Book appointments
                         .requestMatchers("/billing/**").permitAll()            // Billing endpoints
                         .anyRequest().authenticated()
                 )
@@ -94,7 +98,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

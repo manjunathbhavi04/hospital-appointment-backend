@@ -52,4 +52,8 @@ public class SpecialityService {
         specialityRepository.save(speciality);
         return SpecialityTransformer.specialityToSpecialityResponse(speciality);
     }
+
+    public Speciality getSpecialityByName(String specialization) {
+        return specialityRepository.findByName((specialization));
+    }
 }

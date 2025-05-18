@@ -2,6 +2,7 @@ package com.javaProjects.hospital_management.controller;
 
 import java.io.ByteArrayInputStream;
 
+import com.javaProjects.hospital_management.dto.response.BillResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,13 +29,13 @@ public class BillingController {
     private final InvoiceService invoiceService;
 
     @PostMapping("/generate")
-    public ResponseEntity<Billing> generateBill(
+    public ResponseEntity<BillResponse> generateBill(@RequestParam Long appointmentId,
         @RequestParam Long patientId,
         @RequestParam Long doctorId,
         @RequestParam double labFee,
         @RequestParam double medicineFee
     ) {
-        Billing billing = billingService.generateBill(patientId, doctorId, labFee, medicineFee);
+        BillResponse billing = billingService.generateBill(appointmentId, patientId, doctorId, labFee, medicineFee);
         return new ResponseEntity<>(billing, HttpStatus.CREATED);
     }
 
@@ -52,10 +53,15 @@ public class BillingController {
 
         return ResponseEntity.ok()
                 .header("Content-Disposition",
-                        "attachment; fulename=invoice_" + billingId
+                        "attachment; fullName=invoice_" + billingId
                  + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(bis.readAllBytes());
 
+    }
+
+    @GetMapping("/{appointmentId}")
+    public ResponseEntity<BillResponse> getBillByAppointment(@PathVariable("appointmentId") Long id) {
+        return new ResponseEntity<>(billingService.getBillByAppointment(id), HttpStatus.OK);
     }
 }
